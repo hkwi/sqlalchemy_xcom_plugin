@@ -5,16 +5,26 @@ import sqlalchemy.event
 class XcomPlugin(sqlalchemy.engine.CreateEnginePlugin):
 	def __init__(self, url, *args, **kwargs):
 		self.url = url
+
 	def engine_created(self, en):
 		if en.dialect.name != "mysql":
 			return
 		sqlalchemy.event.listen(en, "do_connect", do_connect)
+
+	def handle_pool_kwargs(self, pool_cls, pool_args):
+		dialect = pool_args.get("dialect")
+		if dialect and dialect.name == "mysql":
+			sqlalchemy.event.listen(pool_cls, "checkout", pre_ping)
 
 
 def super_read_only(db):
 	with db.cursor() as cur:
 		assert 1==cur.execute("SELECT @@super_read_only")
 		return 1==cur.fetchone()[0]
+
+def pre_ping(con, connection_record, proxy):
+	if super_read_only(con):
+		raise exc.InvalidatePoolError("invalidate by super_read_only")
 
 def do_connect(dialect, connection_record, cargs, cparams):
 	if dialect.name != "mysql":
