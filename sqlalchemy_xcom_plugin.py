@@ -1,4 +1,5 @@
 import socket
+import warnings
 import sqlalchemy.engine
 import sqlalchemy.event
 
@@ -34,14 +35,21 @@ def do_connect(dialect, connection_record, cargs, cparams):
 	if not super_read_only(con):
 		return con
 	
-	with con.cursor() as cur:
-		assert 1==cur.execute('''SELECT MEMBER_HOST,MEMBER_PORT
+	primary = None
+	try:
+		cur = con.cursor()
+		rows = cur.execute('''SELECT MEMBER_HOST,MEMBER_PORT
 				FROM performance_schema.replication_group_members
 				WHERE MEMBER_ID=(SELECT VARIABLE_VALUE 
 					FROM performance_schema.global_status
 					WHERE VARIABLE_NAME=%s)''',
 			("group_replication_primary_member",))
-		whost,wport=cur.fetchone()
+		if rows:
+			primary = cur.fetchone()
+		cur.close()
+	except:
+		warnings.warn("query performance_schema failed")
+	
 	con.close()
 	
 	# Try basic DNS round-robin first
@@ -59,8 +67,9 @@ def do_connect(dialect, connection_record, cargs, cparams):
 			con.close()
 	
 	# If report-host was properly configured, following may work
-	cparams["host"] = whost
-	cparams["port"] = wport
+	if primary:
+		cparams["host"] = primary[0]
+		cparams["port"] = primary[1]
 	return dialect.connect(*cargs, **cparams)
 
 
