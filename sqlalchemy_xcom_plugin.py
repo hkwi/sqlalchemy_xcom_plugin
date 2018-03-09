@@ -24,7 +24,12 @@ def super_read_only(db):
 		return 1==cur.fetchone()[0]
 
 def pre_ping(con, connection_record, proxy):
-	if super_read_only(con):
+	try:
+		ro = super_read_only(con)
+	except:
+		raise exc.InvalidatePoolError("query super_read_only failed")
+	
+	if ro:
 		raise exc.InvalidatePoolError("invalidate by super_read_only")
 
 def do_connect(dialect, connection_record, cargs, cparams):
