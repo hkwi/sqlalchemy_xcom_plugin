@@ -2,6 +2,7 @@ import socket
 import warnings
 import sqlalchemy.engine
 import sqlalchemy.event
+import sqlalchemy.exc
 
 class XcomPlugin(sqlalchemy.engine.CreateEnginePlugin):
 	def __init__(self, url, *args, **kwargs):
@@ -27,10 +28,10 @@ def pre_ping(con, connection_record, proxy):
 	try:
 		ro = super_read_only(con)
 	except:
-		raise exc.InvalidatePoolError("query super_read_only failed")
+		raise sqlalchemy.exc.InvalidatePoolError("query super_read_only failed")
 	
 	if ro:
-		raise exc.InvalidatePoolError("invalidate by super_read_only")
+		raise sqlalchemy.exc.InvalidatePoolError("invalidate by super_read_only")
 
 def do_connect(dialect, connection_record, cargs, cparams):
 	if dialect.name != "mysql":
