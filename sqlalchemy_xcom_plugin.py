@@ -73,9 +73,10 @@ def do_connect(dialect, connection_record, cargs, cparams):
 			con.close()
 	
 	# If report-host was properly configured, following may work
+	pr = dict(cparams)
 	if primary:
-		cparams["host"] = primary[0]
-		cparams["port"] = primary[1]
-	return dialect.connect(*cargs, **cparams)
+		pr["host"] = primary[0]
+		pr["port"] = primary[1]
+	return dialect.connect(*cargs, **pr)
 
 
