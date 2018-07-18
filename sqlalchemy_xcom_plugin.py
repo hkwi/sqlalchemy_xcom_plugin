@@ -67,10 +67,13 @@ def do_connect(dialect, connection_record, cargs, cparams):
 		for addr in addrs:
 			np = dict(cparams)
 			np.update(host=addr[0], port=addr[1])
-			con = dialect.connect(*cargs, **np)
-			if not super_read_only(con):
-				return con
-			con.close()
+			try:
+				con = dialect.connect(*cargs, **np)
+				if not super_read_only(con):
+					return con
+				con.close()
+			except:
+				pass
 	
 	# If report-host was properly configured, following may work
 	pr = dict(cparams)
