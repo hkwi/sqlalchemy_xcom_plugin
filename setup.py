@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="sqlalchemy_xcom_plugin",
-	version="1.0",
+	version="1.0.1",
 	description="MySQL Group replication connect helper",
 	author="Hiroaki Kawai",
 	author_email="hiroaki.kawai@gmail.com",
